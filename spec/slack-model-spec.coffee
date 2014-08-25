@@ -42,8 +42,10 @@ describe 'SlackModel', ->
       type = SlackModel.buildFileType(editor)
 
     waitsForPromise ->
+      commentText = 'Awesome file'
+
       pathToFile = path.join(atom.project.getPath(), 'file.js')
-      response = slack.sendFile(pathToFile, type, channels)
+      response = slack.sendFile(pathToFile, type, channels, commentText)
 
     runs ->
       console.log(response)

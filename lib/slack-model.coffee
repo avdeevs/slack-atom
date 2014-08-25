@@ -1,4 +1,5 @@
 {$} = require 'atom'
+fs = require 'fs-plus'
 
 module.exports =
   class SlackModel
@@ -8,11 +9,24 @@ module.exports =
     constructor: (token) ->
       @token = token
 
-    sendTextSnippet: (text, type, channels) ->
+    sendTextSnippet: (text, type, channels, comment) ->
       # Code goes here
 
-    sendFile: (file, type, channels) ->
-      $().promise()
+    sendFile: (fileAbsolutePath, type, channels, commentText) ->
+      filename = ''
+      console.log fileAbsolutePath
+      fs.open(fileAbsolutePath, 'r', (openedFile) =>
+        console.log openedFile
+        params =
+          token: @token
+          channels: channels.join(',')
+          filename: filename
+          title: filename
+          initial_comment: commentText
+          file: openedFile
+
+        $.post(@atomApiUrl, params)
+      )
 
     # Static
     @buildFileType: (editor) ->
