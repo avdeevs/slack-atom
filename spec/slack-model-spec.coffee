@@ -6,13 +6,16 @@ fs = require 'fs-plus'
 
 describe 'SlackModel', ->
 
+  [token] = []
+
   beforeEach: ->
+    token = 'xoxp-2222042018-2260480908-2577086899-995163'
+
     atom.workspaceView = new WorkspaceView
     atom.workspace = atom.workspaceView.model
     fs.copySync(path.join(__dirname, 'fixtures'), atom.project.getPath())
 
   describe "get active editor's filetype", ->
-
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
 
@@ -22,3 +25,25 @@ describe 'SlackModel', ->
     runs ->
       editor = atom.workspace.getActiveEditor()
       expect(SlackModel.buildFileType(editor)).toBe 'js'
+
+  describe "send file to @User", ->
+    [slack, type, response] = []
+    channels = ['general', 'daily-ops']
+
+    waitsForPromise ->
+      atom.packages.activatePackage('language-javascript')
+
+    waitsForPromise ->
+      atom.workspace.open('file.js')
+
+    runs ->
+      slack = new SlackModel(token)
+      editor = atom.workspace.getActiveEditor()
+      type = SlackModel.buildFileType(editor)
+
+    waitsForPromise ->
+      pathToFile = path.join(atom.project.getPath(), 'file.js')
+      response = slack.sendFile(pathToFile, type, channels)
+
+    runs ->
+      console.log(response)
