@@ -1,0 +1,16 @@
+{
+  "name": "slack-atom",
+  "main": "./lib/slack-atom",
+  "version": "0.0.0",
+  "description": "A short description of your package",
+  "activationEvents": ["slack-atom:toggle"],
+  "repository": "https://github.com/atom/slack-atom",
+  "license": "MIT",
+  "engines": {
+    "atom": ">0.50.0"
+  },
+  "dependencies": {
+    "jquery-mockjax": "1.5.x",
+     "fs-plus": "2.x"
+  }
+}
