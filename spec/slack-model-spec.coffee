@@ -8,14 +8,13 @@ describe 'SlackModel', ->
 
   [token] = []
 
-  beforeEach: ->
+  beforeEach ->
     token = 'xoxp-2222042018-2260480908-2577086899-995163'
-
     atom.workspaceView = new WorkspaceView
     atom.workspace = atom.workspaceView.model
     fs.copySync(path.join(__dirname, 'fixtures'), atom.project.getPath())
 
-  describe "get active editor's filetype", ->
+  it "gets active editor's filetype", ->
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
 
@@ -26,7 +25,7 @@ describe 'SlackModel', ->
       editor = atom.workspace.getActiveEditor()
       expect(SlackModel.buildFileType(editor)).toBe 'js'
 
-  describe "send file to @User", ->
+  it 'sends file to @User', ->
     [slack, type, response] = []
     channels = ['general', 'daily-ops']
 
@@ -48,4 +47,4 @@ describe 'SlackModel', ->
       response = slack.sendFile(pathToFile, type, channels, commentText)
 
     runs ->
-      console.log(response)
+      console.log(JSON.stringify(response))
