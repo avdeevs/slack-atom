@@ -2,6 +2,11 @@
 
 module.exports =
 class SlackAtomView extends View
+
+  titleText: ''
+  commentText: ''
+  slackModel: null
+
   @content: ->
     @div class: 'slack-atom overlay from-top', =>
       @div "The SlackAtom package is Alive! It's ALIVE!", class: "message"

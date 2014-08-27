@@ -6,11 +6,16 @@ https = require 'http'
 module.exports =
   class SlackModel
 
-    url: 'https://slack.com/api/files.upload'
+    host: 'https://slack.com'
+    uploadPath: '/api/files.upload'
+    channelsListPath: '/api/channels.list'
     token: ''
+
+    channels: null
 
     constructor: (token) ->
       @token = token
+      channels = []
 
     sendTextSnippet: (text, type, channels, commentText) ->
       params =
@@ -20,7 +25,7 @@ module.exports =
         initial_comment: commentText
         content: text
 
-      @_submitForm params
+      @_submitForm "#{@host}#{@uploadPath}", params
 
 
     sendFile: (fileAbsolutePath, type, channels, commentText) ->
@@ -34,17 +39,34 @@ module.exports =
         initial_comment: commentText
         file: fileStream
 
-      @_submitForm params
+      @_submitForm "#{@host}#{@uploadPath}", params
+
+    obtainChannels: ->
+      deferred = new $.Deferred()
+
+      $.getJSON("#{@host}#{@channelsListPath}", { token: @token }).then((res)->
+        console.log(res)
+        if (!res.ok)
+          deferred.reject(res.error)
+          return
+
+        @channels = res.channels
+        deferred.resolve(res.channels)
+
+      ).fail (error)->
+        deferred.reject(error)
+
+      deferred
 
 
-    _submitForm: (params) ->
+    _submitForm: (url, params) ->
       form = new FormData
       for key, value in params
         form.append(key, value)
 
       deferred = new $.Deferred()
 
-      form.submit @url, (err, message) ->
+      form.submit url, (err, message) ->
         if message.statusCode == 200
           deferred.resolve(params, message)
         else

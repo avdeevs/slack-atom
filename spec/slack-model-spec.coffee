@@ -74,3 +74,17 @@ describe 'SlackModel', ->
         expect(params.content).toBe(textToBeSent)
         expect(params.initial_comment).toBe(commentText)
         expect(params.channels).toBe(channels[0])
+
+  it 'fetches channels', ->
+    slack = new SlackModel(token)
+
+    nock('https://slack.com')
+        .get('/api/channels.list')
+        .reply(200,
+          ok: true
+          channels: new Array(13)
+        )
+
+    waitsForPromise ->
+      slack.obtainChannels().then (channels)->
+        expect(channels.length).toBe(13)
