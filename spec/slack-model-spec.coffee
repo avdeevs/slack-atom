@@ -27,7 +27,7 @@ describe 'SlackModel', ->
       editor = atom.workspace.getActiveEditor()
       expect(SlackModel.buildFileType(editor)).toBe 'js'
 
-  it 'sends file to @User', ->
+  it 'sends file to channels', ->
     [slack, type, pathToFile, commentText, channels] = []
     channels = ['C026J180Q']
 
