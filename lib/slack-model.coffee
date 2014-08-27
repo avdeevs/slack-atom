@@ -18,6 +18,10 @@ module.exports =
         channels: channels.join(',')
         title: 'Snippet'
         initial_comment: commentText
+        content: text
+
+      @_submitForm params
+
 
     sendFile: (fileAbsolutePath, type, channels, commentText) ->
       filename = @_parseFileName(fileAbsolutePath)
