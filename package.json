@@ -12,7 +12,6 @@
   "dependencies": {
     "jquery-mockjax": "1.5.x",
      "fs-plus": "2.x",
-     "form-data": "latest",
      "nock": "0.45.x",
      "emissary": "1.x",
      "request": "2.40.x"
