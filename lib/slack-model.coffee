@@ -12,8 +12,12 @@ module.exports =
     constructor: (token) ->
       @token = token
 
-    sendTextSnippet: (text, type, channels, comment) ->
-      # Code goes here
+    sendTextSnippet: (text, type, channels, commentText) ->
+      params =
+        token: @token
+        channels: channels.join(',')
+        title: 'Snippet'
+        initial_comment: commentText
 
     sendFile: (fileAbsolutePath, type, channels, commentText) ->
       filename = @_parseFileName(fileAbsolutePath)
@@ -26,6 +30,10 @@ module.exports =
         initial_comment: commentText
         file: fileStream
 
+      @_submitForm params
+
+
+    _submitForm: (params) ->
       form = new FormData
       for key, value in params
         form.append(key, value)
@@ -40,13 +48,12 @@ module.exports =
 
       deferred.promise()
 
-    # private
+
     _parseFileName: (absolutePath) ->
       # what would be on Windows with / ?
       [_, ..., last] = absolutePath.split('/')
       last
 
-    # static
     @buildFileType: (editor) ->
       scopeName = editor.getGrammar().scopeName
 

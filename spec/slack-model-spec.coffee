@@ -16,6 +16,10 @@ describe 'SlackModel', ->
     atom.workspace = atom.workspaceView.model
     fs.copySync(path.join(__dirname, 'fixtures'), atom.project.getPath())
 
+    nock('https://slack.com')
+        .post('/api/files.upload')
+        .reply(200)
+
   it "gets active editor's filetype", ->
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
@@ -30,10 +34,6 @@ describe 'SlackModel', ->
   it 'sends file to channels', ->
     [slack, type, pathToFile, commentText, channels] = []
     channels = ['C026J180Q']
-
-    nock('https://slack.com')
-        .post('/api/files.upload')
-        .reply(200)
 
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
@@ -55,3 +55,16 @@ describe 'SlackModel', ->
         expect(params.initial_comment).toBe(commentText)
         expect(params.file).not.toBe(null)
         expect(params.channels).toBe(channels[0])
+
+  it 'sends text to channels', ->
+    [slack, type, textToBeSent, commentText, channels] = []
+    channels = ['C026J180Q']
+
+    runs ->
+      slack = new SlackModel(token)
+      type = 'js'
+      commentText = 'Awesome file'
+      textToBeSent = 'var lol'
+
+    waitsForPromise ->
+      slack.sendTextSnippet(textToBeSent, type, channels, commentText)
