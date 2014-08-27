@@ -5,6 +5,7 @@ path = require 'path'
 fs = require 'fs-plus'
 nock = require 'nock'
 
+nock.disableNetConnect()
 
 describe 'SlackModel', ->
 
@@ -16,7 +17,6 @@ describe 'SlackModel', ->
     atom.workspace = atom.workspaceView.model
     fs.copySync(path.join(__dirname, 'fixtures'), atom.project.getPath())
 
-    nock.restore()
     nock('https://slack.com')
         .post('/api/files.upload')
         .reply(200)
@@ -79,7 +79,7 @@ describe 'SlackModel', ->
     slack = new SlackModel(token)
 
     nock('https://slack.com')
-        .get('/api/channels.list')
+        .get("/api/channels.list?token=#{token}")
         .reply(200,
           ok: true
           channels: new Array(13)

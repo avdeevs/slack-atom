@@ -1,7 +1,7 @@
 {$} = require 'atom'
 fs = require 'fs-plus'
 FormData = require 'form-data'
-https = require 'http'
+request = require 'request'
 
 module.exports =
   class SlackModel
@@ -44,20 +44,22 @@ module.exports =
     obtainChannels: ->
       deferred = new $.Deferred()
 
-      $.getJSON("#{@host}#{@channelsListPath}", { token: @token }).then((res)->
-        console.log(res)
-        if (!res.ok)
-          deferred.reject(res.error)
+      request "#{@host}#{@channelsListPath}?token=#{@token}", (error, res, body) =>
+        obj = JSON.parse(body)
+        if (error)
+          deferred.reject(error)
+          return
+        if (!obj.ok)
+          deferred.reject(obj.error)
+          return
+        if (res.statusCode is not 200)
+          deferred.reject({status: res.statusCode})
           return
 
-        @channels = res.channels
-        deferred.resolve(res.channels)
-
-      ).fail (error)->
-        deferred.reject(error)
+        @channels = obj.channels
+        deferred.resolve(obj.channels)
 
       deferred
-
 
     _submitForm: (url, params) ->
       form = new FormData
