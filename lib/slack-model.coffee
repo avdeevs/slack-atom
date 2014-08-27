@@ -1,10 +1,12 @@
 {$} = require 'atom'
 fs = require 'fs-plus'
+FormData = require 'form-data'
+https = require 'http'
 
 module.exports =
   class SlackModel
 
-    atomApiUrl: 'https://slack.com/api/files.upload'
+    url: 'https://slack.com/api/files.upload'
     token: ''
 
     constructor: (token) ->
@@ -14,25 +16,37 @@ module.exports =
       # Code goes here
 
     sendFile: (fileAbsolutePath, type, channels, commentText) ->
-      filename = ''
-
+      filename = @_parseFileName(fileAbsolutePath)
       fileStream = fs.createReadStream(fileAbsolutePath)
 
-      formData = new FormData
-      formData.append('token', @token)
-      formData.append('channels', channels)
-      formData.append('title', filename)
-      formData.append('initial_comment', commentText)
-      formData.append('file', fileStream)
+      params =
+        token: @token
+        channels: channels.join(',')
+        title: filename
+        initial_comment: commentText
+        file: fileStream
 
-      $.ajax
-        url: @atomApiUrl
-        data: formData
-        processData: false
-        contentType: false
-        type: 'POST'
+      form = new FormData
+      for key, value in params
+        form.append(key, value)
 
-    # Static
+      deferred = new $.Deferred()
+
+      form.submit @url, (err, message) ->
+        if message.statusCode == 200
+          deferred.resolve(params, message)
+        else
+          deferred.reject(err or new Error('Received status other than 200'))
+
+      deferred.promise()
+
+    # private
+    _parseFileName: (absolutePath) ->
+      # what would be on Windows with / ?
+      [_, ..., last] = absolutePath.split('/')
+      last
+
+    # static
     @buildFileType: (editor) ->
       scopeName = editor.getGrammar().scopeName
 

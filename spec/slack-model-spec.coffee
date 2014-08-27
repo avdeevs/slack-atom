@@ -3,6 +3,8 @@ SlackModel = require '../lib/slack-model'
 {WorkspaceView} = require 'atom'
 path = require 'path'
 fs = require 'fs-plus'
+nock = require 'nock'
+
 
 describe 'SlackModel', ->
 
@@ -26,8 +28,12 @@ describe 'SlackModel', ->
       expect(SlackModel.buildFileType(editor)).toBe 'js'
 
   it 'sends file to @User', ->
-    [slack, type, response] = []
-    channels = ['general', 'daily-ops']
+    [slack, type, pathToFile, commentText, channels] = []
+    channels = ['C026J180Q']
+
+    nock('https://slack.com')
+        .post('/api/files.upload')
+        .reply(200)
 
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
@@ -39,12 +45,13 @@ describe 'SlackModel', ->
       slack = new SlackModel(token)
       editor = atom.workspace.getActiveEditor()
       type = SlackModel.buildFileType(editor)
+      commentText = 'Awesome file'
+      pathToFile = path.join(atom.project.getPath(), 'file.js')
 
     waitsForPromise ->
-      commentText = 'Awesome file'
-
-      pathToFile = path.join(atom.project.getPath(), 'file.js')
-      response = slack.sendFile(pathToFile, type, channels, commentText)
-
-    runs ->
-      console.log(JSON.stringify(response))
+      slack.sendFile(pathToFile, type, channels, commentText).then (params) ->
+        expect(params.title).toBe('file.js')
+        expect(params.token).toBe(token)
+        expect(params.initial_comment).toBe(commentText)
+        expect(params.file).not.toBe(null)
+        expect(params.channels).toBe(channels[0])
