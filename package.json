@@ -3,7 +3,7 @@
   "main": "./lib/slack-atom",
   "version": "0.0.0",
   "description": "A short description of your package",
-  "activationEvents": ["slack-atom:toggle"],
+  "activationEvents": ["slack-atom:upload-file"],
   "repository": "https://github.com/atom/slack-atom",
   "license": "MIT",
   "engines": {

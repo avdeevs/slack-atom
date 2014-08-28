@@ -19,7 +19,7 @@ describe "SlackAtom", ->
 
       # This is an activation event, triggering it will cause the package to be
       # activated.
-      atom.workspaceView.trigger 'slack-atom:toggle'
+      atom.workspaceView.trigger 'slack-atom:upload-file'
 
       waitsForPromise ->
         activationPromise

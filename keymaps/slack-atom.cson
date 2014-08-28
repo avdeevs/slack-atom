@@ -8,4 +8,4 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
-  'ctrl-alt-o': 'slack-atom:toggle'
+  'ctrl-alt-p': 'slack-atom:upload-file'
