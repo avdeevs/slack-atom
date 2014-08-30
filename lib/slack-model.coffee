@@ -2,6 +2,7 @@
 fs = require 'fs-plus'
 FormData = require 'form-data'
 request = require 'request'
+concat = require('concat-stream')
 
 module.exports =
   class SlackModel
@@ -38,9 +39,11 @@ module.exports =
         title: filename
         initial_comment: commentText
         file: fileStream
+        filetype: type
 
       @_submitForm "#{@host}#{@uploadPath}", params
 
+    # TODO: rename to fetch
     obtainChannels: ->
       deferred = new $.Deferred()
 
@@ -63,14 +66,18 @@ module.exports =
 
     _submitForm: (url, params) ->
       form = new FormData
-      for key, value in params
-        form.append(key, value)
+      Object.keys(params).forEach (key) =>
+        form.append(key, params[key], {filename: 'name'})
 
       deferred = new $.Deferred()
+      form.submit url, (err, res) ->
+        write = concat (data)->
+          console.log JSON.parse(data)
 
-      form.submit url, (err, message) ->
-        if message.statusCode == 200
-          deferred.resolve(params, message)
+        res.pipe write
+
+        if res.statusCode == 200
+          deferred.resolve(params, res)
         else
           deferred.reject(err or new Error('Received status other than 200'))
 

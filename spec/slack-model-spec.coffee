@@ -55,6 +55,7 @@ describe 'SlackModel', ->
         expect(params.token).toBe(token)
         expect(params.initial_comment).toBe(commentText)
         expect(params.file).not.toBe(null)
+        expect(params.filetype).toBe(type)
         expect(params.channels).toBe(channels[0])
 
   it 'sends text to channels', ->
