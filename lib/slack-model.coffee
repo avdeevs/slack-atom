@@ -19,6 +19,9 @@ module.exports =
       channels = []
 
     sendTextSnippet: (text, type, channels, commentText) ->
+      if channels.length is 0
+        return new $.Deferred().reject(new Error('No channels selected'))
+
       params =
         token: @token
         channels: channels.join(',')
@@ -28,10 +31,13 @@ module.exports =
 
       @_submitForm "#{@host}#{@uploadPath}", params
 
-
     sendFile: (fileAbsolutePath, type, channels, commentText) ->
-      filename = @_parseFileName(fileAbsolutePath)
-      fileStream = fs.createReadStream(fileAbsolutePath)
+      if channels.length is 0
+        return new $.Deferred().reject(new Error('No channels selected'))
+
+      path = String(fileAbsolutePath)
+      filename = @_parseFileName(path)
+      fileStream = fs.createReadStream(path)
 
       params =
         token: @token
@@ -71,8 +77,8 @@ module.exports =
         write = concat (data)->
           respBody = JSON.parse data
           switch
-            when res.statusCode is not 200
-              deferred.reject(err or new Error('Received status other than 200'))
+            when not (res.statusCode is 200)
+              deferred.reject(err or new Error("Received status other than 200: #{res.statusCode}"))
             when error = respBody.error
               deferred.reject(new Error("Error: #{error}"))
             else

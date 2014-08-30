@@ -17,9 +17,9 @@ describe 'SlackModel', ->
     atom.workspace = atom.workspaceView.model
     fs.copySync(path.join(__dirname, 'fixtures'), atom.project.getPath())
 
+    nock.cleanAll()
     nock('https://slack.com')
         .post('/api/files.upload')
-        .delay(2000)
         .reply(200, {
           ok: true,
           object: {}
@@ -53,9 +53,8 @@ describe 'SlackModel', ->
       commentText = 'Awesome file'
       pathToFile = path.join(atom.project.getPath(), 'file.js')
 
-    runs ->
+    waitsForPromise ->
       slack.sendFile(pathToFile, type, channels, commentText).then (params) ->
-        console.error 'here'
         expect(params.title).toBe('file.js')
         expect(params.token).toBe(token)
         expect(params.initial_comment).toBe(commentText)
@@ -63,9 +62,18 @@ describe 'SlackModel', ->
         expect(params.filetype).toBe(type)
         expect(params.channels).toBe(channels[0])
 
-  it 'fails to send file to channel', ->
-    [slack, type, pathToFile, commentText, channels] = []
+  it 'fails to send file to channel due to bad token', ->
+    [slack, type, pathToFile, commentText, channels, promise] = []
     channels = ['C026J180Q']
+    token = 'invalidtoken'
+
+    nock.cleanAll()
+    nock('https://slack.com')
+        .post('/api/files.upload')
+        .reply(200, {
+          ok: false,
+          error: 'not_authed'
+        })
 
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
@@ -79,15 +87,43 @@ describe 'SlackModel', ->
       type = SlackModel.buildFileType(editor)
       commentText = 'Awesome file'
       pathToFile = path.join(atom.project.getPath(), 'file.js')
+      promise = slack.sendFile(pathToFile, type, channels, commentText)
+
+    waitsFor ->
+      (promise != null) && (promise.state() is 'rejected')
 
     runs ->
-      slack.sendFile(pathToFile, type, channels, commentText).then (params) ->
-        expect(params.title).toBe('file.js')
-        expect(params.token).toBe(token)
-        expect(params.initial_comment).toBe(commentText)
-        expect(params.file).not.toBe(null)
-        expect(params.filetype).toBe(type)
-        expect(params.channels).toBe(channels[0])
+      promise.fail (error) ->
+        expect(error.message).toBe 'Error: not_authed'
+
+  it 'fails to send file to channel due to http error', ->
+    [slack, type, pathToFile, commentText, channels, promise] = []
+    channels = ['C026J180Q']
+
+    nock.cleanAll()
+    nock('https://slack.com')
+        .post('/api/files.upload')
+        .reply(400, {})
+
+    waitsForPromise ->
+      atom.packages.activatePackage('language-javascript')
+
+    waitsForPromise ->
+      atom.workspace.open('file.js')
+
+    runs ->
+      slack = new SlackModel(token)
+      editor = atom.workspace.getActiveEditor()
+      type = SlackModel.buildFileType(editor)
+      pathToFile = path.join(atom.project.getPath(), 'file.js')
+      promise = slack.sendFile(pathToFile, type, channels, commentText)
+
+    waitsFor ->
+      (promise != null) && (promise.state() is 'rejected')
+
+    runs ->
+      promise.fail (error) ->
+        expect(error.message).toBe 'Received status other than 200: 400'
 
 
   it 'sends text to channels', ->
@@ -100,7 +136,7 @@ describe 'SlackModel', ->
       commentText = 'Awesome file'
       textToBeSent = 'var lol'
 
-    runs ->
+    waitsForPromise ->
       slack.sendTextSnippet(textToBeSent, type, channels, commentText).then (params) ->
         expect(params.token).toBe(token)
         expect(params.title).toBe('Snippet')
@@ -118,6 +154,6 @@ describe 'SlackModel', ->
           channels: new Array(13)
         )
 
-    runs ->
+    waitsForPromise ->
       slack.fetchChannels().then (channels)->
         expect(channels.length).toBe(13)

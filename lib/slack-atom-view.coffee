@@ -22,14 +22,12 @@ class SlackAtomView extends View
           @div class: "pull-right", =>
             @button outlet: 'publishButton', class: 'btn btn-success', "Publish"
             @button outlet: 'cancelButton', class: 'btn btn-primary', "Cancel"
-        @div class: "panel-footer error-message", =>
-          @span outlet: 'errorText'
+        @div outlet: 'footer', class: "panel-footer error-message", =>
+          @span outlet: 'errorText', class: 'danger'
 
   initialize: (serializeState) ->
     atom.workspaceView.command "slack-atom:toggle", => @toggle()
     @_subscribeEvents()
-
-    @errorText.text 'lol'
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -41,6 +39,7 @@ class SlackAtomView extends View
     @_unsubscribeEvents()
 
   toggle: ->
+    @footer.hide()
     console.log "SlackAtomView was toggled!"
     if @hasParent()
       @detach()
@@ -55,8 +54,12 @@ class SlackAtomView extends View
     @title.hide()
     @selectList.setIsLoadingState true
     @toggle()
-    channels = @slackModel.fetchChannels().then (channels) =>
-      @selectList.setOptions @_normalizeOptions(channels)
+    channels = @slackModel.fetchChannels()
+      .then (channels) =>
+        @selectList.setOptions @_normalizeOptions(channels)
+      .fail (error) =>
+        @footer.show()
+        @errorText.text(error)
 
   publish: ->
     activeEditor = atom.workspace.getActiveEditor()
@@ -66,11 +69,15 @@ class SlackAtomView extends View
     type = SlackModel.buildFileType activeEditor
     comment = @comment.getEditor().getText()
 
-    @slackModel.sendFile(path, type, channels, comment).then (res, message) ->
-      console.log res
+    @slackModel.sendFile(path, type, channels, comment)
+      .then (res, message) =>
+        @toggle()
+      .fail (error) =>
+        @footer.show()
+        @errorText.text(error)
 
   _subscribeEvents: ->
-    @publishButton.on 'click', => @publish()
+    @publishButton.on 'click', => @publishFile()
     @cancelButton.on 'click', => @toggle()
 
   _unsubscribeEvents: ->
