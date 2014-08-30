@@ -19,7 +19,11 @@ describe 'SlackModel', ->
 
     nock('https://slack.com')
         .post('/api/files.upload')
-        .reply(200)
+        .delay(2000)
+        .reply(200, {
+          ok: true,
+          object: {}
+        })
 
   it "gets active editor's filetype", ->
     waitsForPromise ->
@@ -49,7 +53,34 @@ describe 'SlackModel', ->
       commentText = 'Awesome file'
       pathToFile = path.join(atom.project.getPath(), 'file.js')
 
+    runs ->
+      slack.sendFile(pathToFile, type, channels, commentText).then (params) ->
+        console.error 'here'
+        expect(params.title).toBe('file.js')
+        expect(params.token).toBe(token)
+        expect(params.initial_comment).toBe(commentText)
+        expect(params.file).not.toBe(null)
+        expect(params.filetype).toBe(type)
+        expect(params.channels).toBe(channels[0])
+
+  it 'fails to send file to channel', ->
+    [slack, type, pathToFile, commentText, channels] = []
+    channels = ['C026J180Q']
+
     waitsForPromise ->
+      atom.packages.activatePackage('language-javascript')
+
+    waitsForPromise ->
+      atom.workspace.open('file.js')
+
+    runs ->
+      slack = new SlackModel(token)
+      editor = atom.workspace.getActiveEditor()
+      type = SlackModel.buildFileType(editor)
+      commentText = 'Awesome file'
+      pathToFile = path.join(atom.project.getPath(), 'file.js')
+
+    runs ->
       slack.sendFile(pathToFile, type, channels, commentText).then (params) ->
         expect(params.title).toBe('file.js')
         expect(params.token).toBe(token)
@@ -57,6 +88,7 @@ describe 'SlackModel', ->
         expect(params.file).not.toBe(null)
         expect(params.filetype).toBe(type)
         expect(params.channels).toBe(channels[0])
+
 
   it 'sends text to channels', ->
     [slack, type, textToBeSent, commentText, channels] = []
@@ -68,7 +100,7 @@ describe 'SlackModel', ->
       commentText = 'Awesome file'
       textToBeSent = 'var lol'
 
-    waitsForPromise ->
+    runs ->
       slack.sendTextSnippet(textToBeSent, type, channels, commentText).then (params) ->
         expect(params.token).toBe(token)
         expect(params.title).toBe('Snippet')
@@ -86,6 +118,6 @@ describe 'SlackModel', ->
           channels: new Array(13)
         )
 
-    waitsForPromise ->
-      slack.obtainChannels().then (channels)->
+    runs ->
+      slack.fetchChannels().then (channels)->
         expect(channels.length).toBe(13)

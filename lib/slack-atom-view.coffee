@@ -17,14 +17,19 @@ class SlackAtomView extends View
         @div class: "panel-body padded", =>
           @subview 'title', new EditorView(mini: true, placeholderText: 'Title')
           @subview 'comment', new EditorView(mini: true, placeholderText: 'Comment text here')
-        @subview 'selectList', new SelectMultipleView
-        @div class: "pull-right", =>
-          @button outlet: 'publishButton', class: 'btn btn-success', "Publish"
-          @button outlet: 'cancelButton', class: 'btn btn-primary', "Cancel"
+          @p 'Select channels: '
+          @subview 'selectList', new SelectMultipleView
+          @div class: "pull-right", =>
+            @button outlet: 'publishButton', class: 'btn btn-success', "Publish"
+            @button outlet: 'cancelButton', class: 'btn btn-primary', "Cancel"
+        @div class: "panel-footer error-message", =>
+          @span outlet: 'errorText'
 
   initialize: (serializeState) ->
     atom.workspaceView.command "slack-atom:toggle", => @toggle()
     @_subscribeEvents()
+
+    @errorText.text 'lol'
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->
@@ -47,9 +52,10 @@ class SlackAtomView extends View
 
   showUploadFile: ->
     @panelTitle.text atom.workspace.getActiveEditor().getPath()
-    @selectList.isLoadingState = true
+    @title.hide()
+    @selectList.setIsLoadingState true
     @toggle()
-    channels = @slackModel.obtainChannels().then (channels) =>
+    channels = @slackModel.fetchChannels().then (channels) =>
       @selectList.setOptions @_normalizeOptions(channels)
 
   publish: ->
@@ -58,8 +64,9 @@ class SlackAtomView extends View
     channels = @_normalizeChannels @selectList.getOptions()
     path = activeEditor.getPath()
     type = SlackModel.buildFileType activeEditor
+    comment = @comment.getEditor().getText()
 
-    @slackModel.sendFile(path, type, channels).then (res, message) ->
+    @slackModel.sendFile(path, type, channels, comment).then (res, message) ->
       console.log res
 
   _subscribeEvents: ->
@@ -67,8 +74,8 @@ class SlackAtomView extends View
     @cancelButton.on 'click', => @toggle()
 
   _unsubscribeEvents: ->
-    #@publishButton.off 'click'
-    #@cancelButton.off 'click'
+    @publishButton.off 'click'
+    @cancelButton.off 'click'
 
   _normalizeOptions: (channels)->
     channels.map (channel)->
@@ -90,18 +97,27 @@ class SelectMultipleView extends View
 
   @content: ->
     @div class: 'select-list', =>
-      @div class: 'error-message', outlet: 'error'
+      @div class: 'loading', outlet: 'loadingArea', =>
+        @span class: 'loading-message', outlet: 'loading'
       @select  outlet: 'list', multiple: 'multiple'
 
   initialize: ->
     @list.on 'change', =>
       @_valueSelected()
 
+  setIsLoadingState: (value) ->
+    if value
+      @list.hide()
+      @loadingArea.show()
+    else
+      @list.show()
+      @loadingArea.hide()
+
   setOptions: (options) ->
     @options = options
     options.forEach (option) =>
       @list.append new Option(option.text, option.value, false, false)
-    @isLoadingState = false
+    @setIsLoadingState false
 
   getOptions: ->
     @options

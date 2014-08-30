@@ -43,46 +43,44 @@ module.exports =
 
       @_submitForm "#{@host}#{@uploadPath}", params
 
-    # TODO: rename to fetch
-    obtainChannels: ->
+    fetchChannels: ->
       deferred = new $.Deferred()
 
       request "#{@host}#{@channelsListPath}?token=#{@token}", (error, res, body) =>
         obj = JSON.parse(body)
-        if (error)
-          deferred.reject(error)
-          return
-        if (!obj.ok)
-          deferred.reject(obj.error)
-          return
-        if (res.statusCode is not 200)
-          deferred.reject({status: res.statusCode})
-          return
-
-        @channels = obj.channels
-        deferred.resolve(obj.channels)
+        switch
+          when error
+            deferred.reject(error)
+          when not obj.ok
+            deferred.reject(obj.error)
+          when res.statusCode is not 200
+            deferred.reject({status: res.statusCode})
+          else
+            @channels = obj.channels
+            deferred.resolve(obj.channels)
 
       deferred
 
     _submitForm: (url, params) ->
       form = new FormData
-      Object.keys(params).forEach (key) =>
-        form.append(key, params[key], {filename: 'name'})
+      Object.keys(params).forEach (key) ->
+        form.append(key, params[key]) if params[key]
 
       deferred = new $.Deferred()
       form.submit url, (err, res) ->
         write = concat (data)->
-          console.log JSON.parse(data)
+          respBody = JSON.parse data
+          switch
+            when res.statusCode is not 200
+              deferred.reject(err or new Error('Received status other than 200'))
+            when error = respBody.error
+              deferred.reject(new Error("Error: #{error}"))
+            else
+              deferred.resolve(params, res)
 
         res.pipe write
 
-        if res.statusCode == 200
-          deferred.resolve(params, res)
-        else
-          deferred.reject(err or new Error('Received status other than 200'))
-
       deferred.promise()
-
 
     _parseFileName: (absolutePath) ->
       # what would be on Windows with / ?
