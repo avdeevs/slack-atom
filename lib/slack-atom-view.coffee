@@ -93,7 +93,6 @@ class SlackAtomView extends View
     .then (channels) =>
       @selectList.setOptions @_normalizeOptions(channels)
     .fail (error) =>
-      console.log error
       @footer.show()
       @errorText.text(error)
 

@@ -7,7 +7,7 @@ module.exports =
   subscriber: null
 
   activate: (state) ->
-    token = 'xoxp-2222042018-2260480908-2600418459-fc13b2'
+    token = atom.config.get('slack-token') or throw new Error('No token found in config, key in cson: slack-token')
     slackModel = new SlackModel(token)
 
     @slackAtomView = new SlackAtomView(state.slackAtomViewState)
