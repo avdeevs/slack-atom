@@ -89,12 +89,13 @@ class SlackAtomView extends View
     @title.hide()
     @selectList.setIsLoadingState true
     @toggle()
-    channels = @slackModel.fetchChannels()
-      .then (channels) =>
-        @selectList.setOptions @_normalizeOptions(channels)
-      .fail (error) =>
-        @footer.show()
-        @errorText.text(error)
+    @slackModel.fetchChannels()
+    .then (channels) =>
+      @selectList.setOptions @_normalizeOptions(channels)
+    .fail (error) =>
+      console.log error
+      @footer.show()
+      @errorText.text(error)
 
   _subscribeEvents: ->
     @publishButton.on 'click', => @publish()

@@ -28,7 +28,7 @@ module.exports =
         title: 'Snippet'
         initial_comment: commentText
         content: text
-        filetype: type
+        filename: "snippet.#{type}"
 
       @_submitForm "#{@host}#{@uploadPath}", params
 
@@ -53,14 +53,16 @@ module.exports =
     fetchChannels: ->
       deferred = new $.Deferred()
 
-      request
+      request.get
         url: "#{@host}#{@channelsListPath}?token=#{@token}",
         timeout: 5000
       , (error, res, body) =>
+        if error
+          return deferred.reject(error).promise()
+
         obj = JSON.parse(body)
+
         switch
-          when error
-            deferred.reject(error)
           when not obj.ok
             deferred.reject(obj.error)
           when res.statusCode is not 200
@@ -69,7 +71,7 @@ module.exports =
             @channels = obj.channels
             deferred.resolve(obj.channels)
 
-      deferred
+      deferred.promise()
 
     _submitForm: (url, params) ->
       form = new FormData
