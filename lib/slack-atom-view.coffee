@@ -8,6 +8,7 @@ class SlackAtomView extends View
   titleText: ''
   commentText: ''
   slackModel: null
+  mode: 'file'
 
   @content: ->
     @div class: 'slack-atom overlay from-top', =>
@@ -50,6 +51,40 @@ class SlackAtomView extends View
     @slackModel = model
 
   showUploadFile: ->
+    @mode = 'file'
+    @_fetchChannelsAndRenderModal()
+
+  showUploadSnippet: ->
+    @mode = 'text'
+    @_fetchChannelsAndRenderModal()
+
+  publish: ->
+    activeEditor = atom.workspace.getActiveEditor()
+
+    channels = @_normalizeChannels @selectList.getOptions()
+    type = SlackModel.buildFileType activeEditor
+    comment = @comment.getEditor().getText()
+
+    switch @mode
+      when 'file'
+        path = activeEditor.getPath()
+        @slackModel.sendFile(path, type, channels, comment)
+          .then (res, message) =>
+            @toggle()
+          .fail (error) =>
+            @footer.show()
+            @errorText.text(error)
+      when 'text'
+        text = activeEditor.getSelectedText()
+        @slackModel.sendTextSnippet(text, type, channels, comment)
+          .then (res, message) =>
+            @toggle()
+          .fail (error) =>
+            @footer.show()
+            @errorText.text(error)
+
+
+  _fetchChannelsAndRenderModal: ->
     @panelTitle.text atom.workspace.getActiveEditor().getPath()
     @title.hide()
     @selectList.setIsLoadingState true
@@ -61,23 +96,8 @@ class SlackAtomView extends View
         @footer.show()
         @errorText.text(error)
 
-  publish: ->
-    activeEditor = atom.workspace.getActiveEditor()
-
-    channels = @_normalizeChannels @selectList.getOptions()
-    path = activeEditor.getPath()
-    type = SlackModel.buildFileType activeEditor
-    comment = @comment.getEditor().getText()
-
-    @slackModel.sendFile(path, type, channels, comment)
-      .then (res, message) =>
-        @toggle()
-      .fail (error) =>
-        @footer.show()
-        @errorText.text(error)
-
   _subscribeEvents: ->
-    @publishButton.on 'click', => @publishFile()
+    @publishButton.on 'click', => @publish()
     @cancelButton.on 'click', => @toggle()
 
   _unsubscribeEvents: ->

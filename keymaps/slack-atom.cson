@@ -9,3 +9,4 @@
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
   'ctrl-alt-p': 'slack-atom:upload-file'
+  'ctrl-alt-o': 'slack-atom:upload-snippet'

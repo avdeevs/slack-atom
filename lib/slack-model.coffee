@@ -28,6 +28,7 @@ module.exports =
         title: 'Snippet'
         initial_comment: commentText
         content: text
+        filetype: type
 
       @_submitForm "#{@host}#{@uploadPath}", params
 
@@ -52,7 +53,10 @@ module.exports =
     fetchChannels: ->
       deferred = new $.Deferred()
 
-      request "#{@host}#{@channelsListPath}?token=#{@token}", (error, res, body) =>
+      request
+        url: "#{@host}#{@channelsListPath}?token=#{@token}",
+        timeout: 5000
+      , (error, res, body) =>
         obj = JSON.parse(body)
         switch
           when error
