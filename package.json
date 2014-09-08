@@ -15,6 +15,7 @@
      "nock": "0.45.x",
      "emissary": "1.x",
      "request": "2.40.x",
-     "concat-stream": "latest"
+     "concat-stream": "latest",
+     "form-data": "latest"
   }
 }
