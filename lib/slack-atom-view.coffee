@@ -129,6 +129,7 @@ class SelectMultipleView extends View
       @select  outlet: 'list', multiple: 'multiple'
 
   initialize: ->
+
     @list.on 'change', =>
       @_valueSelected()
 
@@ -144,7 +145,9 @@ class SelectMultipleView extends View
     @options = options
     options.forEach (option) =>
       @list.append new Option(option.text, option.value, false, false)
+
     @setIsLoadingState false
+    @_valueSelected()
 
   getOptions: ->
     @options
