@@ -2,9 +2,9 @@
   "name": "slack-atom",
   "main": "./lib/slack-atom",
   "version": "0.0.0",
-  "description": "A short description of your package",
+  "description": "Posts files or text snippets to Slack chat",
   "activationEvents": ["slack-atom:upload-file", "slack-atom:upload-snippet"],
-  "repository": "https://github.com/atom/slack-atom",
+  "repository": "https://github.com/sol1dus/slack-atom",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
