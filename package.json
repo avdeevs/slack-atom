@@ -1,9 +1,12 @@
 {
   "name": "slack-atom",
   "main": "./lib/slack-atom",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Posts files or text snippets to Slack chat",
-  "activationEvents": ["slack-atom:upload-file", "slack-atom:upload-snippet"],
+  "activationEvents": [
+    "slack-atom:upload-file",
+    "slack-atom:upload-snippet"
+  ],
   "repository": "https://github.com/sol1dus/slack-atom",
   "license": "MIT",
   "engines": {
@@ -11,11 +14,11 @@
   },
   "dependencies": {
     "jquery-mockjax": "1.5.x",
-     "fs-plus": "2.x",
-     "nock": "0.45.x",
-     "emissary": "1.x",
-     "request": "2.40.x",
-     "concat-stream": "latest",
-     "form-data": "latest"
+    "fs-plus": "2.x",
+    "nock": "0.45.x",
+    "emissary": "1.x",
+    "request": "2.40.x",
+    "concat-stream": "latest",
+    "form-data": "latest"
   }
 }
