@@ -65,6 +65,7 @@ class SlackAtomView extends View
 
     channels = @_normalizeChannels @selectList.getOptions()
     fileType = SlackModel.buildFileType activeEditor
+    console.log fileType
 
     switch @mode
       when 'file' then @_publishFile(activeEditor, fileType, channels)

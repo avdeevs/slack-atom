@@ -25,12 +25,24 @@ describe 'SlackModel', ->
           object: {}
         })
 
-  it "gets active editor's filetype", ->
+  it "gets active editor's filetype from extension", ->
+    waitsForPromise ->
+      atom.workspace.open('file.js')
+
+    runs ->
+      editor = atom.workspace.getActiveEditor()
+      expect(SlackModel.buildFileType(editor)).toBe 'js'
+
+  it "gets active editor's filetype from grammar", ->
+    waitsForPromise ->
+      atom.workspace.open('file')
+
     waitsForPromise ->
       atom.packages.activatePackage('language-javascript')
 
-    waitsForPromise ->
-      atom.workspace.open('file.js')
+    runs ->
+      editor = atom.workspace.getActiveEditor()
+      editor.setGrammar(atom.syntax.grammarForScopeName('source.js'))
 
     runs ->
       editor = atom.workspace.getActiveEditor()

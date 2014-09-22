@@ -101,5 +101,7 @@ module.exports =
 
     @buildFileType: (editor) ->
       scopeName = editor.getGrammar().scopeName
+      fileName = editor.getTitle().split('.')
+      [_, ..., extension] = fileName if fileName.length > 1
 
-      scopeName.match(/.+\.(.+)/)[1]
+      extension or scopeName.match(/.+\.(.+)/)[1]
