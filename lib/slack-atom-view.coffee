@@ -40,21 +40,23 @@ class SlackAtomView extends View
     @_unsubscribeEvents()
 
   toggle: ->
-    @footer.hide()
     console.log "SlackAtomView was toggled!"
     if @hasParent()
       @detach()
     else
       atom.workspaceView.append(this)
+      @footer.hide()
 
   setSlackModel: (model)->
     @slackModel = model
 
   showUploadFile: ->
+    @panelTitle.text atom.workspace.getActiveEditor().getPath()
     @mode = 'file'
     @_fetchChannelsAndRenderModal()
 
   showUploadSnippet: ->
+    @panelTitle.text 'Uploading snippet'
     @mode = 'text'
     @_fetchChannelsAndRenderModal()
 
@@ -62,30 +64,38 @@ class SlackAtomView extends View
     activeEditor = atom.workspace.getActiveEditor()
 
     channels = @_normalizeChannels @selectList.getOptions()
-    type = SlackModel.buildFileType activeEditor
-    comment = @comment.getEditor().getText()
+    fileType = SlackModel.buildFileType activeEditor
 
     switch @mode
-      when 'file'
-        path = activeEditor.getPath()
-        @slackModel.sendFile(path, type, channels, comment)
-          .then (res, message) =>
-            @toggle()
-          .fail (error) =>
-            @footer.show()
-            @errorText.text(error)
-      when 'text'
-        text = activeEditor.getSelectedText()
-        @slackModel.sendTextSnippet(text, type, channels, comment)
-          .then (res, message) =>
-            @toggle()
-          .fail (error) =>
-            @footer.show()
-            @errorText.text(error)
+      when 'file' then @_publishFile(activeEditor, fileType, channels)
+      when 'text' then @_publishTextSnippet(activeEditor, fileType, channels)
 
+  _publishFile: (activeEditor, type, channels) ->
+    comment = @comment.getEditor().getText()
+    path = activeEditor.getPath()
+
+    @slackModel.sendFile(path, type, channels, comment)
+      .then (res, message) =>
+        @toggle()
+      .fail (error) =>
+        @footer.show()
+        @errorText.text(error)
+
+  _publishTextSnippet: (activeEditor, type, channels) ->
+    text = activeEditor.getSelectedText()
+    unless text
+      @_showErrorMessage 'Text to be sent is empty'
+      return
+
+    comment = @comment.getEditor().getText()
+
+    @slackModel.sendTextSnippet(text, type, channels, comment)
+      .then (res, message) =>
+        @toggle()
+      .fail (error) =>
+        @_showErrorMessage error
 
   _fetchChannelsAndRenderModal: ->
-    @panelTitle.text atom.workspace.getActiveEditor().getPath()
     @title.hide()
     @selectList.setIsLoadingState true
     @toggle()
@@ -93,8 +103,7 @@ class SlackAtomView extends View
     .then (channels) =>
       @selectList.setOptions @_normalizeOptions(channels)
     .fail (error) =>
-      @footer.show()
-      @errorText.text(error)
+      @_showErrorMessage error
 
   _subscribeEvents: ->
     @publishButton.on 'click', => @publish()
@@ -116,6 +125,10 @@ class SlackAtomView extends View
       channels = channels.concat option.value if option.selected
 
     channels
+
+  _showErrorMessage: (error)->
+    @footer.show()
+    @errorText.text(error)
 
 class SelectMultipleView extends View
 
